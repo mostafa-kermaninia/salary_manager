@@ -5,12 +5,16 @@
 #include <cstdlib>
 #include <sstream>
 #include <fstream>
+#include <cmath>
+
 using namespace std;
 
 const int FILE_PATH_INDEX = 1;
 const int EMPLOYEE_PROPERTIES_COUNT = 4;
 const int DEFAULT = 0;
+const int ONE_MONTH_DAYS = 30;
 const string NOT_FOUND = "";
+const int NOTFOUND = -1;
 
 void error(string message)
 {
@@ -18,6 +22,7 @@ void error(string message)
 }
 
 // موجوديت ها
+class Employee;
 class WorkingHour
 {
 private:
@@ -35,6 +40,7 @@ public:
         periodEnd = pe;
     }
     int get_employee_id() { return employeeId; }
+    int get_day() { return day; }
     pair<int, int> get_period() { return {periodStart, periodEnd}; }
 };
 class SalaryConfig
@@ -68,15 +74,21 @@ public:
     }
 
     string get_level() { return level; }
-    int find_total_earning(int totalWHours)
+    int get_tax_percentage() { return taxPercentage; }
+    int find_init_earning(int totalWHours)
     {
+        int initialEarning = baseSalary, earningWithTax;
         if (totalWHours > officialWorkingHours)
         {
-            /* code */
+            int extraHours = totalWHours - officialWorkingHours;
+            initialEarning += (officialWorkingHours * salaryPerHour);
+            initialEarning += (extraHours * salaryPerExtraHour);
         }
         else
         {
+            initialEarning += (totalWHours * salaryPerHour);
         }
+        return initialEarning;
     }
     void show_config()
     {
@@ -109,26 +121,52 @@ private:
     vector<int> memberIds;
     double bonusWorkingHoursMaxVariance;
     int bonusMinWorkingHours;
+    int bonusPercentage;
+
+    vector<Employee *> members;
 
 public:
-    Team(int ti, int hi, vector<int> mi,
-         double b, int bm = 0)
+    Team(int ti, int hi, vector<int> mi, double b, int bm, int bp = 0)
     {
         teamId = ti;
         teamHeadId = hi;
         memberIds = mi;
         bonusWorkingHoursMaxVariance = b;
         bonusMinWorkingHours = bm;
+        bonusPercentage = bp;
     }
+
     vector<int> get_member_ids() { return memberIds; }
-    void printId()
+    int get_team_id() { return teamId; }
+    int get_bonus_percentage() { return bonusPercentage; }
+    int get_head_id() { return teamHeadId; }
+
+    int find_team_total_working_hours()
     {
-        for (int id : memberIds)
+        int result = 0;
+        for (int i = 0; i < members.size(); i++)
         {
-            cout << id << " ";
+            result += members[i]->find_total_working_hours();
         }
-        cout << endl;
+        return result;
     }
+    double find_avg_member_working_hour()
+    {
+        int totalHours = find_team_total_working_hours();
+        double avgHours = totalHours / members.size();
+        double roundedAvg = round(avgHours * 10) / 10;
+        return roundedAvg;
+    }
+    void show_members_info()
+    {
+        for (int i = 0; i < members.size(); i++)
+        {
+            cout << "Member ID: " << members[i]->get_id() << endl
+                 << "Total Earning: " << members[i]->find_total_earning() << endl
+                 << "---" << endl;
+        }
+    }
+    void set_team_member(Employee *employee) { members.push_back(employee); }
 };
 class Employee
 {
@@ -137,6 +175,7 @@ private:
     string name;
     int age;
     string level;
+
     vector<WorkingHour *> workingPeriods;
     SalaryConfig *salaryConfig;
     Team *team;
@@ -155,10 +194,27 @@ public:
     void set_team(Team *empTeam) { team = empTeam; }
 
     int get_id() { return id; }
+    int get_age() { return age; }
     string get_name() { return name; }
     string get_level() { return level; }
     SalaryConfig *get_salary_config() { return salaryConfig; }
+    string get_emp_team_id()
+    {
+        if (team != NULL)
+            return to_string(team->get_team_id());
+        else
+            return "N/A";
+    }
 
+    int find_absent_days()
+    {
+        set<int> nonRepWorkDays;
+        for (WorkingHour *workperiod : workingPeriods)
+        {
+            nonRepWorkDays.insert(workperiod->get_day());
+        }
+        return ONE_MONTH_DAYS - nonRepWorkDays.size();
+    }
     int find_total_working_hours()
     {
         int result = 0;
@@ -168,6 +224,28 @@ public:
         }
         return result;
     }
+    int find_initial_earning()
+    {
+        return salaryConfig->find_init_earning(find_total_working_hours());
+    }
+    int find_bonus_amount()
+    {
+        if (team != NULL)
+        {
+            int initialEarning = find_initial_earning();
+            return (team->get_bonus_percentage() * initialEarning) / 100.0 + 0.5;
+        }
+        return 0;
+    }
+    int find_tax_amount()
+    {
+        int initialEarning = find_initial_earning() + find_bonus_amount();
+        return (get_salary_config()->get_tax_percentage() * initialEarning) / 100.0 + 0.5;
+    }
+    int find_total_earning()
+    {
+        return find_initial_earning() + find_bonus_amount() - find_tax_amount();
+    }
 
     void koko()
     {
@@ -176,29 +254,9 @@ public:
             cout << w->get_period().first << "  " << w->get_period().second << endl;
         }
         salaryConfig->show_config();
-        team->printId();
         cout << endl
 
              << endl;
-    }
-};
-
-// اعمال خاص
-class EmployeeSalaryInfo
-{
-private:
-    Employee *employee;
-    SalaryConfig *salaryConfig;
-
-public:
-    EmployeeSalaryInfo(Employee *emp, SalaryConfig *sal)
-    {
-        employee = emp;
-        salaryConfig = sal;
-    }
-
-    void report_salary()
-    {
     }
 };
 
@@ -227,7 +285,30 @@ private:
                 }
             }
         }
-        error("NO TEAMS!");
+        return NULL;
+    }
+    Employee *find_employee_by_id(int id)
+    {
+        for (int i = 0; i < employees.size(); i++)
+        {
+            if (id == employees[i]->get_id())
+            {
+                return employees[i];
+            }
+        }
+        error("EMPLOYEE_NOT_FOUND");
+        return NULL;
+    }
+    Team *find_team_by_id(int teamId)
+    {
+        for (int i = 0; i < teams.size(); i++)
+        {
+            if (teamId == teams[i]->get_team_id())
+            {
+                return teams[i];
+            }
+        }
+        error("TEAM_NOT_FOUND");
         return NULL;
     }
 
@@ -264,7 +345,7 @@ public:
         teams = t;
         salaryConfigs = s;
     }
-
+    // *0*
     void connectObjects()
     {
         for (int i = 0; i < employees.size(); i++)
@@ -273,46 +354,76 @@ public:
             set_emp_s_config(employees[i]);
             set_emp_team(employees[i]);
         }
-        for (Employee *i : employees)
+        for (int i = 0; i < teams.size(); i++)
         {
-            cout << i->get_name() << endl;
-            i->koko();
+            vector<int> memberIds = teams[i]->get_member_ids();
+            for (int j = 0; j < memberIds.size(); j++)
+            {
+                teams[i]->set_team_member(find_employee_by_id(memberIds[j]));
+            }
         }
-    }
 
+        // for (Employee *i : employees)
+        // {
+        //     cout << i->get_name() << endl;
+        //     i->koko();
+        // }
+    }
     // *1*
     void report_salaries()
     {
         for (Employee *employee : employees)
         {
-            int total_working_hours = employee->find_total_working_hours();
             cout << "ID: " << employee->get_id() << endl
                  << "Name: " << employee->get_name() << endl
-                 << "Total Working Hours: " << total_working_hours << endl
-                 << "Total Earning: " << employee->get_salary_config()->find_total_earning(total_working_hours) << endl;
+                 << "Total Working Hours: " << employee->find_total_working_hours() << endl
+                 << "Total Earning: " << employee->find_total_earning() << endl
+                 << "---" << endl;
         }
     }
-
     // *2*
-    // void report_employee_salary (employee_id)
-    // {
-    // }
-
+    void report_employee_salary(int employeeId)
+    {
+        Employee *selectedEmp = find_employee_by_id(employeeId);
+        if (selectedEmp != NULL)
+        {
+            cout << "ID: " << selectedEmp->get_id() << endl
+                 << "Name: " << selectedEmp->get_name() << endl
+                 << "Age: " << selectedEmp->get_age() << endl
+                 << "Level: " << selectedEmp->get_level() << endl
+                 << "Team ID: " << selectedEmp->get_emp_team_id() << endl
+                 << "Total Working Hours: " << selectedEmp->find_total_working_hours() << endl
+                 << "Absent Days: " << selectedEmp->find_absent_days() << endl
+                 << "Salary: " << selectedEmp->find_initial_earning() << endl
+                 << "Bonus: " << selectedEmp->find_bonus_amount() << endl
+                 << "Tax: " << selectedEmp->find_tax_amount() << endl
+                 << "Total Earning: " << selectedEmp->find_total_earning() << endl;
+        }
+    }
     // *3*
-    // void report_team_salary (team_id)
-    // {
-    // }
-
+    void report_team_salary(int teamId)
+    {
+        Team *selectedTeam = find_team_by_id(teamId);
+        if (selectedTeam != NULL)
+        {
+            cout << "ID: " << selectedTeam->get_team_id() << endl
+                 << "Head ID: " << selectedTeam->get_head_id() << endl
+                 << "Head Name: " << find_employee_by_id(selectedTeam->get_head_id())->get_name() << endl
+                 << "Team Total Working Hours: " << selectedTeam->find_team_total_working_hours() << endl
+                 << "Average Member Working Hour: " << selectedTeam->find_avg_member_working_hour() << endl
+                 << "Bonus: " << selectedTeam->get_bonus_percentage() << endl
+                 << "---" << endl;
+            selectedTeam->show_members_info();
+        }
+    }
     // *4*
-    // void report_total_hours_per_day (start_day, end_day)
-    // {
-    // }
-
+    void report_total_hours_per_day(int startDay, int endDay)
+    {
+    }
     // *5*
-    // void report_employee_per_hour (start_hour, end_hour)
-    // {
-    // }
-
+    void report_employee_per_hour(int startHour, int endHour)
+    {
+    }
     // *6*
     void show_salary_config(string level)
     {
@@ -321,7 +432,6 @@ public:
         if (selectedSalary != NULL)
             selectedSalary->show_config();
     }
-
     // *7*
     void update_salary_config(string level, string baseSalary, string salaryPerHour,
                               string salaryPerExtraHour, string officialWorkingHours, string taxPercentage)
@@ -332,27 +442,23 @@ public:
             selectedSalary->update_config(baseSalary, salaryPerHour,
                                           salaryPerExtraHour, officialWorkingHours, taxPercentage);
     }
-
     // *8*
     void add_working_hours(int employeeId, int day, int periodStart, int periodEnd)
     {
     }
-
     // *9*
-    // void delete_working_hours (employee_id, day)
-    // {
-    // }
-
+    void delete_working_hours(int employeeId, int day)
+    {
+    }
     // *10*
-    // void update_team_bonus (team_id, bonus_percentage)
-    // {
-    // }
-
+    void update_team_bonus(int teamId, int bonusPercentage)
+    {
+    }
     // *11*
-    // void find_teams_for_bonus()
-    // {
-    // }
-
+    void find_teams_for_bonus()
+    {
+    }
+    // *12*
     void delete_everything()
     {
         // زدي رو ديليت كن از هيپ new سرچ كن هر جا
@@ -396,13 +502,40 @@ int main(int argc, char *argv[])
          new SalaryConfig("senior", 17000, 100, 75, 176, 28),
          new SalaryConfig("expert", 26500, 140, 112, 176, 25),
          new SalaryConfig("team_lead", 33000, 180, 134, 184, 32)});
-
     program.connectObjects();
 
     string command;
     while (cin >> command)
     {
-        if (command == "show_salary_config")
+        if (command == "report_salaries")
+        {
+            program.report_salaries();
+        }
+        else if (command == "report_employee_salary")
+        {
+            int employeeId;
+            cin >> employeeId;
+            program.report_employee_salary(employeeId);
+        }
+        else if (command == "report_team_salary")
+        {
+            int teamId;
+            cin >> teamId;
+            program.report_team_salary(teamId);
+        }
+        else if (command == "report_total_hours_per_day")
+        {
+            int startDay, endDay;
+            cin >> startDay >> endDay;
+            program.report_total_hours_per_day(startDay, endDay);
+        }
+        else if (command == "report_employee_per_hour")
+        {
+            int startHour, endHour;
+            cin >> startHour >> endHour;
+            program.report_employee_per_hour(startHour, endHour);
+        }
+        else if (command == "show_salary_config")
         {
             string level;
             cin >> level;
@@ -421,15 +554,28 @@ int main(int argc, char *argv[])
             cin >> employeeId >> day >> periodStart >> periodEnd;
             program.add_working_hours(employeeId, day, periodStart, periodEnd);
         }
-        else if (command == "report_salaries")
+        else if (command == "delete_working_hours")
         {
-            program.report_salaries();
+            int employeeId, day;
+            cin >> employeeId >> day;
+            program.delete_working_hours(employeeId, day);
+        }
+        else if (command == "update_team_bonus")
+        {
+            int teamId, bonusPercentage;
+            cin >> teamId >> bonusPercentage;
+            program.update_team_bonus(teamId, bonusPercentage);
+        }
+        else if (command == "find_teams_for_bonus")
+        {
+            program.find_teams_for_bonus();
         }
         else
         {
             error("unknown command\n");
         }
     }
+
     program.delete_everything();
     return 0;
 }
