@@ -67,7 +67,7 @@ private:
     {
         if (startHour > ONE_DAY_HOURS || startHour < 0 ||
             endHour > ONE_DAY_HOURS || endHour < 0 ||
-            endHour < startHour)
+            endHour <= startHour)
         {
             return false;
         }
@@ -372,7 +372,7 @@ double SetOfWorkingHours::find_avg_emps_by_start_hour(int startHour)
 {
     int endHour = startHour + 1;
     int sumOfEmps = 0;
-    for (int day = 0; day < ONE_MONTH_DAYS; day++)
+    for (int day = 1; day <= ONE_MONTH_DAYS; day++)
     {
         set<int> workingEmpIds;
         for (int i = 0; i < workingHours.size(); i++)
