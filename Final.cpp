@@ -563,9 +563,7 @@ private:
     {
         emp->set_team(find_team_by_member_id(emp->get_id()));
     }
-    pair<int, int> convert_string_to_time(string inputStr)
-    {
-    }
+
     vector<string> stringSplitter(string text, char splitter)
     {
         string word = "";
@@ -582,20 +580,23 @@ private:
         }
         return words;
     }
-
     vector<string> read_file(string filePath)
     {
         vector<string> readFile;
         ifstream inputFile(filePath);
         string lineOfFile;
+        getline(inputFile, lineOfFile);
         while (getline(inputFile, lineOfFile))
         {
+            if (lineOfFile[lineOfFile.size() - 1] == '\r')
+                lineOfFile = lineOfFile.substr(0, lineOfFile.size() - 1);
             istringstream line(lineOfFile);
             string fileElement;
             while (getline(line, fileElement, ','))
                 readFile.push_back(fileElement);
         }
         inputFile.close();
+        return readFile;
     }
 
     vector<Employee *> build_emps_vec(vector<string> readFile)
@@ -622,7 +623,8 @@ private:
             int employeeId = stoi(readFile[W_HOURS_ATTR_COUNT * i]);
             int day = stoi(readFile[W_HOURS_ATTR_COUNT * i + 1]);
             vector<string> timePeriod = stringSplitter(readFile[W_HOURS_ATTR_COUNT * i + 2], '-');
-            int periodStart = stoi(timePeriod[0]), periodEnd = stoi(timePeriod[1]);
+            int periodStart = stoi(timePeriod[0]);
+            int periodEnd = stoi(timePeriod[1]);
 
             wHour.add_new_period(new WorkingHour(employeeId, day, periodStart, periodEnd));
         }
@@ -643,7 +645,7 @@ private:
                 memberIds.push_back(stoi(idStr));
             }
             int bonusMinWorkingHours = stoi(readFile[W_HOURS_ATTR_COUNT * i + 3]);
-            double bonusWorkingHoursMaxVariance = stof(readFile[W_HOURS_ATTR_COUNT * i + 4]);
+            double bonusWorkingHoursMaxVariance = stod(readFile[W_HOURS_ATTR_COUNT * i + 4]);
 
             teams.push_back(new Team(teamId, teamHeadId, memberIds, bonusMinWorkingHours, bonusWorkingHoursMaxVariance));
         }
@@ -721,9 +723,9 @@ public:
         vector<string> salConfigsFile = read_file(salaryConfigsFPath);
 
         employees = build_emps_vec(empsFile);
-        workingHours = build_working_hours_vec(empsFile);
-        teams = build_teams_vec(empsFile);
-        salaryConfigs = build_salary_configs_vec(empsFile);
+        workingHours = build_working_hours_vec(wHoursFile);
+        teams = build_teams_vec(teamsFile);
+        salaryConfigs = build_salary_configs_vec(salConfigsFile);
 
         connectObjects();
     }
