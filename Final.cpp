@@ -534,7 +534,7 @@ private:
         return NULL;
     }
 
-    void sort_by_total_working_hours(vector<Team *> teams)
+    void sort_by_convention(vector<Team *> &teams)
     {
         for (int i = 0; i < teams.size(); i++)
         {
@@ -545,6 +545,15 @@ private:
                     Team *temp = teams[i];
                     teams[i] = teams[j];
                     teams[j] = temp;
+                }
+                else if (teams[i]->find_team_total_working_hours() == teams[j]->find_team_total_working_hours())
+                {
+                    if (teams[i]->get_team_id() > teams[j]->get_team_id())
+                    {
+                        Team *temp = teams[i];
+                        teams[i] = teams[j];
+                        teams[j] = temp;
+                    }
                 }
             }
         }
@@ -907,7 +916,7 @@ public:
         }
         if (worthyTeams.size() != 0)
         {
-            sort_by_total_working_hours(worthyTeams);
+            sort_by_convention(worthyTeams);
             for (int i = 0; i < worthyTeams.size(); i++)
             {
                 cout << "Team ID: " << worthyTeams[i]->get_team_id() << endl;
