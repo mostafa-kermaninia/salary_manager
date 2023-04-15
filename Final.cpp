@@ -486,7 +486,14 @@ void SetOfWorkingHours::show_employee_per_hour(int startHour, int endHour)
 class Program
 {
 private:
-    SalaryConfig *find_salary_by_level(string level);
+    SalaryConfig *find_salary_by_level(string level)
+    {
+        for (int i = 0; i < salaryConfigs.size(); i++)
+            if (salaryConfigs[i]->get_level() == level)
+                return salaryConfigs[i];
+        error("INVALID_LEVEL");
+        return NULL;
+    }
     Team *find_team_by_member_id(int id)
     {
         for (int i = 0; i < teams.size(); i++)
@@ -907,6 +914,7 @@ public:
             cout << "NO_BONUS_TEAMS\n";
         }
     }
+
     // --12--
     void handle_commands()
     {
