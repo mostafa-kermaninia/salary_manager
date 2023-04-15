@@ -272,7 +272,7 @@ int Team ::find_team_total_working_hours()
 double Team ::find_avg_member_working_hour()
 {
     int totalHours = find_team_total_working_hours();
-    double avgHours = totalHours / members.size();
+    double avgHours = (double)totalHours / members.size();
     return avgHours;
 }
 double Team ::find_emps_working_hours_variance()
@@ -563,8 +563,24 @@ private:
     {
         emp->set_team(find_team_by_member_id(emp->get_id()));
     }
+    void sortAscending(vector<int> &vec)
+    {
+        for (int i = 0; i < vec.size(); i++)
+        {
+            for (int j = i; j < vec.size(); j++)
+            {
+                if (vec[i] > vec[j])
+                {
+                    int temp = vec[i];
+                    vec[i] = vec[j];
+                    vec[j] = temp;
+                }
+            }
+        }
+    }
 
-    vector<string> stringSplitter(string text, char splitter)
+    vector<string>
+    stringSplitter(string text, char splitter)
     {
         string word = "";
         vector<string> words;
@@ -638,12 +654,13 @@ private:
         {
             int teamId = stoi(readFile[TEAMS_ATTR_COUNT * i]);
             int teamHeadId = stoi(readFile[TEAMS_ATTR_COUNT * i + 1]);
-            vector<string> memberIdsStr = stringSplitter(readFile[TEAMS_ATTR_COUNT * i + 2], '-');
+            vector<string> memberIdsStr = stringSplitter(readFile[TEAMS_ATTR_COUNT * i + 2], '$');
             vector<int> memberIds;
             for (string idStr : memberIdsStr)
             {
                 memberIds.push_back(stoi(idStr));
             }
+            sortAscending(memberIds);
             int bonusMinWorkingHours = stoi(readFile[TEAMS_ATTR_COUNT * i + 3]);
             double bonusWorkingHoursMaxVariance = stod(readFile[TEAMS_ATTR_COUNT * i + 4]);
 
@@ -769,9 +786,9 @@ public:
             cout << "ID: " << selectedTeam->get_team_id() << endl
                  << "Head ID: " << selectedTeam->get_head_id() << endl
                  << "Head Name: " << find_employee_by_id(selectedTeam->get_head_id())->get_name() << endl
-                 << "Team Total Working Hours: " << selectedTeam->find_team_total_working_hours() << endl
-                 << "Average Member Working Hour: " << round(selectedTeam->find_avg_member_working_hour() * 10) / 10 << endl
-                 << "Bonus: " << selectedTeam->get_bonus_percentage() << endl
+                 << "Team Total Working Hours: " << selectedTeam->find_team_total_working_hours() << endl;
+            printf("Average Member Working Hours: %.1f\n", round(selectedTeam->find_avg_member_working_hour() * 10) / 10);
+            cout << "Bonus: " << selectedTeam->get_bonus_percentage() << endl
                  << "---" << endl;
             selectedTeam->show_members_info();
         }
