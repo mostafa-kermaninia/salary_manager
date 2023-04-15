@@ -11,7 +11,7 @@
 using namespace std;
 
 const string NOT_FOUND = "";
-const int FILE_PATH_INDEX = 1;
+const int FOLDER_PATH_INDEX = 1;
 const int EMPLOYEE_PROPERTIES_COUNT = 4;
 const int DEFAULT = 0;
 const int ONE_MONTH_DAYS = 30;
@@ -529,7 +529,7 @@ private:
         error("TEAM_NOT_FOUND");
         return NULL;
     }
-    
+
     void sort_by_total_working_hours(vector<Team *> teams)
     {
         for (int i = 0; i < teams.size(); i++)
@@ -566,6 +566,52 @@ private:
         emp->set_team(find_team_by_member_id(emp->get_id()));
     }
 
+    vector<string> read_file(string filePath)
+    {
+        vector<string> readFile;
+        ifstream inputFile(filePath);
+        string lineOfFile;
+        while (getline(inputFile, lineOfFile))
+        {
+            istringstream line(lineOfFile);
+            string fileElement;
+            while (getline(line, fileElement, ','))
+                readFile.push_back(fileElement);
+        }
+        inputFile.close();
+    }
+    
+    vector<Employee *> build_emps_vec(vector<string> readFile)
+    {
+    }
+    SetOfWorkingHours build_working_hours_vec(vector<string> readFile)
+    {
+    }
+    vector<Team *> build_teams_vec(vector<string> readFile)
+    {
+    }
+    vector<SalaryConfig *> build_salary_configs_vec(vector<string> readFile)
+    {
+    }
+    
+    void connectObjects()
+    {
+        for (int i = 0; i < employees.size(); i++)
+        {
+            set_emp_w_hours(employees[i]);
+            set_emp_s_config(employees[i]);
+            set_emp_team(employees[i]);
+        }
+        for (int i = 0; i < teams.size(); i++)
+        {
+            vector<int> memberIds = teams[i]->get_member_ids();
+            for (int j = 0; j < memberIds.size(); j++)
+            {
+                teams[i]->set_team_member(find_employee_by_id(memberIds[j]));
+            }
+        }
+    }
+
     bool is_valid_day(int day)
     {
         if (day < 1 || day > 30)
@@ -592,38 +638,60 @@ private:
     vector<SalaryConfig *> salaryConfigs;
 
 public:
-    Program(vector<Employee *> e, vector<WorkingHour *> w,
-            vector<Team *> t, vector<SalaryConfig *> s)
+    // Program(vector<Employee *> e, vector<WorkingHour *> w,
+    //         vector<Team *> t, vector<SalaryConfig *> s)
+    // {
+    //     employees = e;
+    //     workingHours = w;
+    //     teams = t;
+    //     salaryConfigs = s;
+    // }
+    Program(string FolderPath)
     {
-        employees = e;
-        workingHours = w;
-        teams = t;
-        salaryConfigs = s;
-    }
-    // --0--
-    void connectObjects()
-    {
-        for (int i = 0; i < employees.size(); i++)
-        {
-            set_emp_w_hours(employees[i]);
-            set_emp_s_config(employees[i]);
-            set_emp_team(employees[i]);
-        }
-        for (int i = 0; i < teams.size(); i++)
-        {
-            vector<int> memberIds = teams[i]->get_member_ids();
-            for (int j = 0; j < memberIds.size(); j++)
-            {
-                teams[i]->set_team_member(find_employee_by_id(memberIds[j]));
-            }
-        }
+        // Program program (
+        //     {new Employee(1, "AzadehZahedi", 28, "junior"),
+        //      new Employee(2, "MehranAmiri", 32, "expert"),
+        //      new Employee(3, "ParvinKarami", 45, "senior"),
+        //      new Employee(4, "BehzadAbbasi", 26, "junior"),
+        //      new Employee(5, "GolnazEmadi", 39, "team_lead"),
+        //      new Employee(6, "HatefJahangiri", 50, "junior"),
+        //      new Employee(7, "DonyaMohammadi", 31, "team_lead")},
+        //     {new WorkingHour(2, 16, 9, 16),
+        //      new WorkingHour(7, 22, 8, 17),
+        //      new WorkingHour(5, 7, 8, 12),
+        //      new WorkingHour(4, 21, 14, 17),
+        //      new WorkingHour(6, 30, 14, 21),
+        //      new WorkingHour(7, 9, 14, 20),
+        //      new WorkingHour(3, 12, 13, 17),
+        //      new WorkingHour(5, 7, 14, 18),
+        //      new WorkingHour(1, 18, 7, 11),
+        //      new WorkingHour(6, 25, 13, 19),
+        //      new WorkingHour(7, 9, 9, 10),
+        //      new WorkingHour(1, 18, 13, 17),
+        //      new WorkingHour(2, 18, 9, 17)},
+        //     {new Team(1, 2, {2, 4}, 410, 22.837),
+        //      new Team(2, 3, {3, 1}, 450, 31.416)},
+        //     {new SalaryConfig("junior", 13000, 60, 48, 210, 15),
+        //      new SalaryConfig("senior", 21500, 100, 75, 215, 28),
+        //      new SalaryConfig("expert", 31000, 140, 112, 215, 25),
+        //      new SalaryConfig("team_lead", 40000, 180, 134, 220, 32)});
+        // program.connectObjects();
+        string employeesFPath = FolderPath + "/employees.csv", workingHoursFPath = FolderPath + "/working_hours.csv",
+               teamsFPath = FolderPath + "/teams.csv", salaryConfigsFPath = FolderPath + "/salary_configs.csv";
 
-        // for (Employee *i : employees)
-        // {
-        //     cout << i->get_name() << endl;
-        //     i->koko();
-        // }
+        vector<string> empsFile = read_file(employeesFPath);
+        vector<string> wHoursFile = read_file(workingHoursFPath);
+        vector<string> teamsFile = read_file(teamsFPath);
+        vector<string> salConfigsFile = read_file(salaryConfigsFPath);
+
+        employees = build_emps_vec(empsFile);
+        workingHours = build_working_hours_vec(empsFile);
+        teams = build_teams_vec(empsFile);
+        salaryConfigs = build_salary_configs_vec(empsFile);
+
+        connectObjects();
     }
+
     // *1*
     void report_salaries()
     {
@@ -692,27 +760,12 @@ public:
     // *5*
     void report_employee_per_hour(int startHour, int endHour)
     {
-        // SetOfWorkingHours selectedWorkingHours;
-        // for (int i = 0; i < workingHours.get_periods().size(); i++)
-        // {
-        //     for (int hour = startHour; hour < endHour; hour++)
-        //     {
-        //         int startOfPeriod = workingHours.get_periods()[i]->get_period().first;
-        //         int endOfPeriod = workingHours.get_periods()[i]->get_period().second;
-        //         if (startOfPeriod <= hour && endOfPeriod >= hour + 1)
-        //         {
-        //             selectedWorkingHours.add_new_period(workingHours.get_periods()[i]);
-        //         }
-        //     }
-        // }
-        // selectedWorkingHours.show_employee_per_hour(startHour, endHour);
         workingHours.show_employee_per_hour(startHour, endHour);
     }
     // *6*
     void show_salary_config(string level)
     {
         SalaryConfig *selectedSalary = find_salary_by_level(level);
-        // اگر لول داده شده معتبر بود،اپديت را انجام بده
         if (selectedSalary != NULL)
             selectedSalary->show_config();
     }
@@ -721,7 +774,6 @@ public:
                               string salaryPerExtraHour, string officialWorkingHours, string taxPercentage)
     {
         SalaryConfig *selectedSalary = find_salary_by_level(level);
-        // اگر لول داده شده معتبر بود،اپديت را انجام بده
         if (selectedSalary != NULL)
             selectedSalary->update_config(baseSalary, salaryPerHour,
                                           salaryPerExtraHour, officialWorkingHours, taxPercentage);
@@ -794,6 +846,7 @@ public:
             cout << "NO_BONUS_TEAMS\n";
         }
     }
+
     // --12--
     void handle_commands()
     {
@@ -872,7 +925,6 @@ public:
     // --13--
     void delete_everything()
     {
-        // زدي رو ديليت كن از هيپ new سرچ كن هر جا
         for (Employee *employee : employees)
             delete employee;
         for (WorkingHour *workingHour : workingHours.get_periods())
@@ -886,36 +938,11 @@ public:
 
 int main(int argc, char *argv[])
 {
-    Program program(
-        {new Employee(1, "AzadehZahedi", 28, "junior"),
-         new Employee(2, "MehranAmiri", 32, "expert"),
-         new Employee(3, "ParvinKarami", 45, "senior"),
-         new Employee(4, "BehzadAbbasi", 26, "junior"),
-         new Employee(5, "GolnazEmadi", 39, "team_lead"),
-         new Employee(6, "HatefJahangiri", 50, "junior"),
-         new Employee(7, "DonyaMohammadi", 31, "team_lead")},
-        {new WorkingHour(2, 16, 9, 16),
-         new WorkingHour(7, 22, 8, 17),
-         new WorkingHour(5, 7, 8, 12),
-         new WorkingHour(4, 21, 14, 17),
-         new WorkingHour(6, 30, 14, 21),
-         new WorkingHour(7, 9, 14, 20),
-         new WorkingHour(3, 12, 13, 17),
-         new WorkingHour(5, 7, 14, 18),
-         new WorkingHour(1, 18, 7, 11),
-         new WorkingHour(6, 25, 13, 19),
-         new WorkingHour(7, 9, 9, 10),
-         new WorkingHour(1, 18, 13, 17),
-         new WorkingHour(2, 18, 9, 17)},
-        {new Team(1, 2, {2, 4}, 410, 22.837),
-         new Team(2, 3, {3, 1}, 450, 31.416)},
-        {new SalaryConfig("junior", 13000, 60, 48, 210, 15),
-         new SalaryConfig("senior", 21500, 100, 75, 215, 28),
-         new SalaryConfig("expert", 31000, 140, 112, 215, 25),
-         new SalaryConfig("team_lead", 40000, 180, 134, 220, 32)});
-    program.connectObjects();
+    Program program(argv[FOLDER_PATH_INDEX]);
 
     program.handle_commands();
+
     program.delete_everything();
+
     return 0;
 }
