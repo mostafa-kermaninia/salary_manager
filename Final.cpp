@@ -187,7 +187,7 @@ public:
     string get_level() { return level; }
     string get_emp_team_id();
     SalaryConfig *get_salary_config() { return salaryConfig; }
-    SetOfWorkingHours get_working_periods() { return workingPeriods; }
+    SetOfWorkingHours *get_working_periods() { return &workingPeriods; }
 
     void set_working_periods(SetOfWorkingHours workingHours) { workingPeriods = workingHours; }
     void add_working_period(WorkingHour *workingHour) { workingPeriods.add_new_period(workingHour); }
@@ -390,8 +390,9 @@ void SetOfWorkingHours::delete_periods_by_day_and_emp(int employeeId, int day)
     {
         if (workingHours[i]->get_day() == day && workingHours[i]->get_employee_id() == employeeId)
         {
+            // delete workingHours[i];
             workingHours.erase(workingHours.begin() + i);
-            delete workingHours[i];
+            i--;
         }
     }
 }
@@ -853,7 +854,7 @@ public:
         if (selectedEmp != NULL && is_valid_day(day))
         {
             workingHours.delete_periods_by_day_and_emp(employeeId, day);
-            selectedEmp->get_working_periods().delete_periods_by_day_and_emp(employeeId, day);
+            selectedEmp->get_working_periods()->delete_periods_by_day_and_emp(employeeId, day);
             cout << "OK\n";
         }
     }
