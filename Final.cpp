@@ -395,7 +395,6 @@ void SetOfWorkingHours::delete_periods_by_day_and_emp(int employeeId, int day)
     {
         if (workingHours[i]->get_day() == day && workingHours[i]->get_employee_id() == employeeId)
         {
-            // delete workingHours[i];
             workingHours.erase(workingHours.begin() + i);
             i--;
         }
@@ -467,7 +466,8 @@ void SetOfWorkingHours::show_employee_per_hour(int startHour, int endHour)
         vector<pair<string, string>> hourAndAvgEmps;
         for (int i = startHour; i < endHour; i++)
         {
-            cout << i << "-" << i + 1 << ": " << find_avg_emps_by_start_hour(i) << endl;
+            cout << i << "-" << i + 1 << ": ";
+            printf("%.1f\n", find_avg_emps_by_start_hour(i));
             string timePeriod = to_string(i) + '-' + to_string(i + 1);
             hourAndAvgEmps.push_back({timePeriod, to_string(find_avg_emps_by_start_hour(i))});
         }
@@ -486,14 +486,7 @@ void SetOfWorkingHours::show_employee_per_hour(int startHour, int endHour)
 class Program
 {
 private:
-    SalaryConfig *find_salary_by_level(string level)
-    {
-        for (int i = 0; i < salaryConfigs.size(); i++)
-            if (salaryConfigs[i]->get_level() == level)
-                return salaryConfigs[i];
-        error("INVALID_LEVEL");
-        return NULL;
-    }
+    SalaryConfig *find_salary_by_level(string level);
     Team *find_team_by_member_id(int id)
     {
         for (int i = 0; i < teams.size(); i++)
@@ -778,12 +771,12 @@ public:
     // *1*
     void report_salaries()
     {
-        for (Employee *employee : employees)
+        for (int i = 0; i < employees.size(); i++)
         {
-            cout << "ID: " << employee->get_id() << endl
-                 << "Name: " << employee->get_name() << endl
-                 << "Total Working Hours: " << employee->find_emp_total_working_hours() << endl
-                 << "Total Earning: " << employee->find_total_earning() << endl
+            cout << "ID: " << employees[i]->get_id() << endl
+                 << "Name: " << employees[i]->get_name() << endl
+                 << "Total Working Hours: " << employees[i]->find_emp_total_working_hours() << endl
+                 << "Total Earning: " << employees[i]->find_total_earning() << endl
                  << "---" << endl;
         }
     }
@@ -825,19 +818,6 @@ public:
     // *4*
     void report_total_hours_per_day(int startDay, int endDay)
     {
-        // SetOfWorkingHours selectedWorkingHours;
-        // for (int i = 0; i < workingHours.get_periods().size(); i++)
-        // {
-        //     for (int day = startDay; day <= endDay; day++)
-        //     {
-        //         if (workingHours.get_periods()[i]->get_day() == day)
-        //         {
-        //             selectedWorkingHours.add_new_period(workingHours.get_periods()[i]);
-        //         }
-        //     }
-        // }
-        // selectedWorkingHours.show_total_hours_per_day(startDay, endDay);
-        // cout<<"poloooooooooo\n";
         workingHours.show_total_hours_per_day(startDay, endDay);
     }
     // *5*
@@ -927,7 +907,6 @@ public:
             cout << "NO_BONUS_TEAMS\n";
         }
     }
-
     // --12--
     void handle_commands()
     {
