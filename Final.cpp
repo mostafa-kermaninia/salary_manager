@@ -9,6 +9,11 @@
 using namespace std;
 
 const string NOT_FOUND = "";
+const string EMPS_PATH = "/employees.csv";
+const string WORKING_HOURS_PATH = "/working_hours.csv";
+const string TEAMS_PATH = "/teams.csv";
+const string SAL_CONFIGS_PATH = "/salary_configs.csv";
+
 const int FOLDER_PATH_INDEX = 1;
 const int DEFAULT = 0;
 const int ONE_MONTH_DAYS = 30;
@@ -629,6 +634,20 @@ private:
 
             emps.push_back(new Employee(id, name, age, level));
         }
+
+        for (int i = 0; i < emps.size(); i++)
+        {
+            for (int j = i; j < emps.size(); j++)
+            {
+                if (emps[i]->get_id() > emps[j]->get_id())
+                {
+                    Employee *temp = emps[i];
+                    emps[i] = emps[j];
+                    emps[j] = temp;
+                }
+            }
+        }
+
         return emps;
     }
     SetOfWorkingHours build_working_hours_vec(vector<string> readFile)
@@ -732,8 +751,8 @@ private:
 public:
     Program(string FolderPath)
     {
-        string employeesFPath = FolderPath + "/employees.csv", workingHoursFPath = FolderPath + "/working_hours.csv",
-               teamsFPath = FolderPath + "/teams.csv", salaryConfigsFPath = FolderPath + "/salary_configs.csv";
+        string employeesFPath = FolderPath + EMPS_PATH, workingHoursFPath = FolderPath + WORKING_HOURS_PATH,
+               teamsFPath = FolderPath + TEAMS_PATH, salaryConfigsFPath = FolderPath + SAL_CONFIGS_PATH;
 
         vector<string> empsFile = read_file(employeesFPath);
         vector<string> wHoursFile = read_file(workingHoursFPath);
