@@ -636,16 +636,16 @@ private:
         vector<Team *> teams;
         for (int i = 0; i < readFile.size() / TEAMS_ATTR_COUNT; i++)
         {
-            int teamId = stoi(readFile[W_HOURS_ATTR_COUNT * i]);
-            int teamHeadId = stoi(readFile[W_HOURS_ATTR_COUNT * i + 1]);
-            vector<string> memberIdsStr = stringSplitter(readFile[W_HOURS_ATTR_COUNT * i + 2], '-');
+            int teamId = stoi(readFile[TEAMS_ATTR_COUNT * i]);
+            int teamHeadId = stoi(readFile[TEAMS_ATTR_COUNT * i + 1]);
+            vector<string> memberIdsStr = stringSplitter(readFile[TEAMS_ATTR_COUNT * i + 2], '-');
             vector<int> memberIds;
             for (string idStr : memberIdsStr)
             {
                 memberIds.push_back(stoi(idStr));
             }
-            int bonusMinWorkingHours = stoi(readFile[W_HOURS_ATTR_COUNT * i + 3]);
-            double bonusWorkingHoursMaxVariance = stod(readFile[W_HOURS_ATTR_COUNT * i + 4]);
+            int bonusMinWorkingHours = stoi(readFile[TEAMS_ATTR_COUNT * i + 3]);
+            double bonusWorkingHoursMaxVariance = stod(readFile[TEAMS_ATTR_COUNT * i + 4]);
 
             teams.push_back(new Team(teamId, teamHeadId, memberIds, bonusMinWorkingHours, bonusWorkingHoursMaxVariance));
         }
@@ -657,12 +657,12 @@ private:
         vector<SalaryConfig *> salConfigs;
         for (int i = 0; i < readFile.size() / SAL_CONFIGS_ATTR_COUNT; i++)
         {
-            string level = readFile[W_HOURS_ATTR_COUNT * i];
-            int base_salary = stoi(readFile[W_HOURS_ATTR_COUNT * i + 1]);
-            int salary_per_hour = stoi(readFile[W_HOURS_ATTR_COUNT * i + 2]);
-            int salary_per_extra_hour = stoi(readFile[W_HOURS_ATTR_COUNT * i + 3]);
-            int official_working_hours = stoi(readFile[W_HOURS_ATTR_COUNT * i + 4]);
-            int tax_percentage = stoi(readFile[W_HOURS_ATTR_COUNT * i + 5]);
+            string level = readFile[SAL_CONFIGS_ATTR_COUNT * i];
+            int base_salary = stoi(readFile[SAL_CONFIGS_ATTR_COUNT * i + 1]);
+            int salary_per_hour = stoi(readFile[SAL_CONFIGS_ATTR_COUNT * i + 2]);
+            int salary_per_extra_hour = stoi(readFile[SAL_CONFIGS_ATTR_COUNT * i + 3]);
+            int official_working_hours = stoi(readFile[SAL_CONFIGS_ATTR_COUNT * i + 4]);
+            int tax_percentage = stoi(readFile[SAL_CONFIGS_ATTR_COUNT * i + 5]);
             salConfigs.push_back(new SalaryConfig(level, base_salary, salary_per_hour, salary_per_extra_hour, official_working_hours, tax_percentage));
         }
         return salConfigs;
