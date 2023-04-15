@@ -2,26 +2,24 @@
 #include <vector>
 #include <set>
 #include <string>
-#include <cstdlib>
 #include <sstream>
 #include <fstream>
-#include <cmath>
 #include <math.h>
 
 using namespace std;
 
 const string NOT_FOUND = "";
 const int FOLDER_PATH_INDEX = 1;
-const int EMPLOYEE_PROPERTIES_COUNT = 4;
 const int DEFAULT = 0;
 const int ONE_MONTH_DAYS = 30;
 const int ONE_DAY_HOURS = 24;
 const int NOTFOUND = -1;
+const int EMPLOYEES_ATTR_COUNT = 4;
+const int W_HOURS_ATTR_COUNT = 3;
+const int TEAMS_ATTR_COUNT = 5;
+const int SAL_CONFIGS_ATTR_COUNT = 6;
 
-void error(string message)
-{
-    cout << message << endl;
-}
+void error(string message) { cout << message << endl; }
 
 class Employee;
 class WorkingHour
@@ -139,7 +137,7 @@ private:
     vector<Employee *> members;
 
 public:
-    Team(int ti, int hi, vector<int> mi, double b, int bm, int bp = 0)
+    Team(int ti, int hi, vector<int> mi, int bm, double b, int bp = 0)
     {
         teamId = ti;
         teamHeadId = hi;
@@ -565,6 +563,25 @@ private:
     {
         emp->set_team(find_team_by_member_id(emp->get_id()));
     }
+    pair<int, int> convert_string_to_time(string inputStr)
+    {
+    }
+    vector<string> stringSplitter(string text, char splitter)
+    {
+        string word = "";
+        vector<string> words;
+        for (int i = 0; i <= text.size(); i++)
+        {
+            if (text[i] == splitter || text[i] == '\0' || text[i] == '\n')
+            {
+                words.push_back(word);
+                word = "";
+            }
+            else
+                word += text[i];
+        }
+        return words;
+    }
 
     vector<string> read_file(string filePath)
     {
@@ -580,20 +597,75 @@ private:
         }
         inputFile.close();
     }
-    
+
     vector<Employee *> build_emps_vec(vector<string> readFile)
     {
+        // int id, string name, int age, string level
+        vector<Employee *> emps;
+        for (int i = 0; i < readFile.size() / EMPLOYEES_ATTR_COUNT; i++)
+        {
+            int id = stoi(readFile[EMPLOYEES_ATTR_COUNT * i]);
+            string name = readFile[EMPLOYEES_ATTR_COUNT * i + 1];
+            int age = stoi(readFile[EMPLOYEES_ATTR_COUNT * i + 2]);
+            string level = readFile[EMPLOYEES_ATTR_COUNT * i + 3];
+
+            emps.push_back(new Employee(id, name, age, level));
+        }
+        return emps;
     }
     SetOfWorkingHours build_working_hours_vec(vector<string> readFile)
     {
+        // int employeeId, int day, int periodStart, int periodEnd;
+        SetOfWorkingHours wHour;
+        for (int i = 0; i < readFile.size() / W_HOURS_ATTR_COUNT; i++)
+        {
+            int employeeId = stoi(readFile[W_HOURS_ATTR_COUNT * i]);
+            int day = stoi(readFile[W_HOURS_ATTR_COUNT * i + 1]);
+            vector<string> timePeriod = stringSplitter(readFile[W_HOURS_ATTR_COUNT * i + 2], '-');
+            int periodStart = stoi(timePeriod[0]), periodEnd = stoi(timePeriod[1]);
+
+            wHour.add_new_period(new WorkingHour(employeeId, day, periodStart, periodEnd));
+        }
+        return wHour;
     }
     vector<Team *> build_teams_vec(vector<string> readFile)
     {
+        // int teamId, int teamHeadId, vector<int> memberIds, double bonusWorkingHoursMaxVariance, int bonusMinWorkingHours, int bonusPercentage
+        vector<Team *> teams;
+        for (int i = 0; i < readFile.size() / TEAMS_ATTR_COUNT; i++)
+        {
+            int teamId = stoi(readFile[W_HOURS_ATTR_COUNT * i]);
+            int teamHeadId = stoi(readFile[W_HOURS_ATTR_COUNT * i + 1]);
+            vector<string> memberIdsStr = stringSplitter(readFile[W_HOURS_ATTR_COUNT * i + 2], '-');
+            vector<int> memberIds;
+            for (string idStr : memberIdsStr)
+            {
+                memberIds.push_back(stoi(idStr));
+            }
+            int bonusMinWorkingHours = stoi(readFile[W_HOURS_ATTR_COUNT * i + 3]);
+            double bonusWorkingHoursMaxVariance = stof(readFile[W_HOURS_ATTR_COUNT * i + 4]);
+
+            teams.push_back(new Team(teamId, teamHeadId, memberIds, bonusMinWorkingHours, bonusWorkingHoursMaxVariance));
+        }
+        return teams;
     }
     vector<SalaryConfig *> build_salary_configs_vec(vector<string> readFile)
     {
+        // level,base_salary,salary_per_hour,salary_per_extra_hour,official_working_hours,tax_percentage
+        vector<SalaryConfig *> salConfigs;
+        for (int i = 0; i < readFile.size() / SAL_CONFIGS_ATTR_COUNT; i++)
+        {
+            string level = readFile[W_HOURS_ATTR_COUNT * i];
+            int base_salary = stoi(readFile[W_HOURS_ATTR_COUNT * i + 1]);
+            int salary_per_hour = stoi(readFile[W_HOURS_ATTR_COUNT * i + 2]);
+            int salary_per_extra_hour = stoi(readFile[W_HOURS_ATTR_COUNT * i + 3]);
+            int official_working_hours = stoi(readFile[W_HOURS_ATTR_COUNT * i + 4]);
+            int tax_percentage = stoi(readFile[W_HOURS_ATTR_COUNT * i + 5]);
+            salConfigs.push_back(new SalaryConfig(level, base_salary, salary_per_hour, salary_per_extra_hour, official_working_hours, tax_percentage));
+        }
+        return salConfigs;
     }
-    
+
     void connectObjects()
     {
         for (int i = 0; i < employees.size(); i++)
@@ -638,44 +710,8 @@ private:
     vector<SalaryConfig *> salaryConfigs;
 
 public:
-    // Program(vector<Employee *> e, vector<WorkingHour *> w,
-    //         vector<Team *> t, vector<SalaryConfig *> s)
-    // {
-    //     employees = e;
-    //     workingHours = w;
-    //     teams = t;
-    //     salaryConfigs = s;
-    // }
     Program(string FolderPath)
     {
-        // Program program (
-        //     {new Employee(1, "AzadehZahedi", 28, "junior"),
-        //      new Employee(2, "MehranAmiri", 32, "expert"),
-        //      new Employee(3, "ParvinKarami", 45, "senior"),
-        //      new Employee(4, "BehzadAbbasi", 26, "junior"),
-        //      new Employee(5, "GolnazEmadi", 39, "team_lead"),
-        //      new Employee(6, "HatefJahangiri", 50, "junior"),
-        //      new Employee(7, "DonyaMohammadi", 31, "team_lead")},
-        //     {new WorkingHour(2, 16, 9, 16),
-        //      new WorkingHour(7, 22, 8, 17),
-        //      new WorkingHour(5, 7, 8, 12),
-        //      new WorkingHour(4, 21, 14, 17),
-        //      new WorkingHour(6, 30, 14, 21),
-        //      new WorkingHour(7, 9, 14, 20),
-        //      new WorkingHour(3, 12, 13, 17),
-        //      new WorkingHour(5, 7, 14, 18),
-        //      new WorkingHour(1, 18, 7, 11),
-        //      new WorkingHour(6, 25, 13, 19),
-        //      new WorkingHour(7, 9, 9, 10),
-        //      new WorkingHour(1, 18, 13, 17),
-        //      new WorkingHour(2, 18, 9, 17)},
-        //     {new Team(1, 2, {2, 4}, 410, 22.837),
-        //      new Team(2, 3, {3, 1}, 450, 31.416)},
-        //     {new SalaryConfig("junior", 13000, 60, 48, 210, 15),
-        //      new SalaryConfig("senior", 21500, 100, 75, 215, 28),
-        //      new SalaryConfig("expert", 31000, 140, 112, 215, 25),
-        //      new SalaryConfig("team_lead", 40000, 180, 134, 220, 32)});
-        // program.connectObjects();
         string employeesFPath = FolderPath + "/employees.csv", workingHoursFPath = FolderPath + "/working_hours.csv",
                teamsFPath = FolderPath + "/teams.csv", salaryConfigsFPath = FolderPath + "/salary_configs.csv";
 
@@ -691,7 +727,6 @@ public:
 
         connectObjects();
     }
-
     // *1*
     void report_salaries()
     {
@@ -770,13 +805,11 @@ public:
             selectedSalary->show_config();
     }
     // *7*
-    void update_salary_config(string level, string baseSalary, string salaryPerHour,
-                              string salaryPerExtraHour, string officialWorkingHours, string taxPercentage)
+    void update_salary_config(string level, string baseSalary, string salaryPerHour, string salaryPerExtraHour, string officialWorkingHours, string taxPercentage)
     {
         SalaryConfig *selectedSalary = find_salary_by_level(level);
         if (selectedSalary != NULL)
-            selectedSalary->update_config(baseSalary, salaryPerHour,
-                                          salaryPerExtraHour, officialWorkingHours, taxPercentage);
+            selectedSalary->update_config(baseSalary, salaryPerHour, salaryPerExtraHour, officialWorkingHours, taxPercentage);
     }
     // *8*
     void add_working_hours(int employeeId, int day, int periodStart, int periodEnd)
